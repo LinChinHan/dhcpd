@@ -1,0 +1,173 @@
+#!/bin/bash
+
+#set -x
+
+function radvd_add(){
+	# $1 : interface
+	# $2 : Vlan
+	# $3 : IP
+	# $4 : mask
+
+	echo "Modfiying radvd.conf ...."
+	if [ $2 = 'untag' ]; then
+		ret=$1
+	else
+		ret=`awk  '{print $2}' radvd.conf | grep $1 | grep $2`
+	fi
+	echo "ret = $ret"
+	echo "===="
+	if [ -z $ret ]; then
+		# Need to add example
+		echo "interface ${ret}" >> radvd.conf
+		echo "{" >> radvd.conf
+		echo "   AdvSendAdvert on;" >> radvd.conf
+		echo "   MaxRtrAdvInterval 60;" >> radvd.conf
+		echo "   MinDelayBetweenRAs  60;" >> radvd.conf
+		echo "   AdvManagedFlag  on;" >> radvd.conf
+		echo "   AdvOtherConfigFlag on;" >> radvd.conf
+		echo "   prefix $3/$4" >> radvd.conf
+		echo "   {" >> radvd.conf
+		echo "     AdvOnLink on;" >> radvd.conf
+		echo "     AdvAutonomous on;" >> radvd.conf
+		echo "     AdvRouterAddr on;" >> radvd.conf
+		echo "   };" > radvd.conf
+		echo "   RDNSS 2001:4860:4860::8888 2001:4860:4860::8844" > radvd.conf
+		echo "    {" > radvd.conf
+		echo "      AdvRDNSSLifetime 30;" > radvd.conf
+		echo "    };" > radvd.conf
+		echo "};" > radvd.conf
+
+
+	else
+		echo "No need to add, exist already. . ."
+	fi
+}
+
+function radvd_del(){
+	echo "Deleting radvd.conf ...."
+}
+
+function dhcpd_add(){
+	echo "Modifying dhcpd.conf ...."
+}
+
+function dhcpd_del(){
+	echo "Deleting dhcpd.conf ...."
+}
+
+#No interface
+if [ ! $2 ] || [ ! $1 ] ; then
+	op='help'
+else
+	op=$1
+fi
+
+if [ ! $3 ]; then
+        vlan=untag
+	address=172.16.1.1
+	netmask=24
+	
+	# HE gave : 2001:470:eeac::48
+	#untag interface ip allocation
+	#2001:470:eeac:0::/64 for IANA of untag interface
+	#2001:470:eeac:6666::/64 to 2001:470:eeac:7777:: for PD of untag interface
+
+	#vlan id should be 2 to 4095, will not affect the prefix of untag interface
+
+	#tag interface ip allocation
+	#2001:470:eeac:[vlan ID]::/65 for IANA
+	#2001:470:eeac:[vlan ID]:8000::/65 for IANA
+	#::1 will always to be used in server side.
+	addressV6=2001:470:eeac:0::1
+	netmaskV6=64
+else
+	vlan=$3
+
+	#for vlan interface, prefix 65
+	#2001:470:eeac:[vlanID]:0000~7fff::/65 for IANA. ( 1 bit to allocate to IANA) 
+	#2001:470:eeac:[vlanID]:8000~f000::/68 for PD use ( 3 bits allocate to  8 DUTs (PD))
+	
+	netmask=24
+	netmaskV6=65
+	
+        re='^[0-9]+$'
+        if ! [[ ${vlan} =~ $re ]] ; then
+                echo "Error: Not a number" >&2; exit 1
+        fi
+
+        if [ "${vlan}" -lt 2 ] || [ "${vlan}" -gt 4094 ]; then
+                echo "Error: The Vlan must be 2 ~ 4094" >&2; exit 1
+        fi
+
+	#v4 ip is 10.[vlan(3:2)].[vlan(1:0)].x
+	#ex: vlan 3001 = 10.30.01.x
+
+	if [ $3 -lt 100 ]; then
+		address=10.0.${vlan}.1
+	else
+		address=10.`expr ${vlan} / 100`.`expr ${vlan} % 100`.1
+	fi
+
+	#::1 will always to be used in server side.
+	addressV6=2001:470:eeac:${vlan}::1
+fi
+
+
+
+
+case ${op} in
+        "add")
+		interface=$2
+		echo "Start to set up ${interface}.${vlan}"
+		echo "AddressV4 ${address}/${netmask}"
+		echo "AdresssV6 ${addressV6}/${netmaskV6}"
+		if [ ! $3 ]; then
+			ifconfig ${interface} ${address}/${netmask} up
+			if [ `iptables -nvxL -t nat | grep 172.16.1.0` = '']; then
+				iptables -t nat -A POSTROUTING -s ${address}/${netmask} -o ppp0 -j MASQUERADE
+			else
+				echo " iptables rule is exist already. skip..."
+			fi
+		else
+			vconfig add ${interface} ${vlan}
+			if [ $? != 0 ]; then
+				echo " Add Vlan for interface failed. Please check interface is correctly."
+				exit 1
+			fi
+			ifconfig ${interface}.${vlan} ${address}/${netmask} up
+			ip addr add ${addressV6}/${netmaskV6} dev ${interface}.${vlan}
+			iptables -t nat -A POSTROUTING -s ${address}/${netmask} -o ppp0 -j MASQUERADE
+		fi
+		radvd_add ${interface} ${vlan} ${addressV6} ${netmaskV6}
+        ;;
+        "del")
+		interface=$2
+		echo "Start to delete ${interface}.${vlan}"
+		if [ ! $3 ]; then
+                        echo "Default untag interface is unable to delete!"
+			exit 1
+                else
+			ip addr del ${addressV6}/${netmaskV6} dev ${interface}.${vlan}
+			if [ $? != 0 ]; then
+				echo " Remove ip failed, please check interface \"${interface}.${vlan}\" is exist."
+				exit 1
+			fi
+                        ifconfig ${interface}.${vlan} ${address}/${netmask} down
+                        vconfig rem ${interface}.${vlan}
+			iptables -t nat -D POSTROUTING -s ${address}/${netmask} -o ppp0 -j MASQUERADE
+                fi
+        ;;
+        *)
+        echo "-Usage:"
+        echo "  $0 [options] [interface] [Vlan]"
+        echo "    If untag, keep empty."
+        echo "  - options:"
+        echo "      add"
+        echo "          Add Interface."
+        echo "      del"
+        echo "          Delete Interface."
+        echo "   - interface:"
+        echo "          Network interface name"
+        echo "   - vlan: [2~4094]"
+
+esac
