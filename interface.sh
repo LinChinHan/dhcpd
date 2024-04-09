@@ -212,6 +212,14 @@ function dhcpdV6_del(){
 #No interface
 if [ ! $2 ] || [ ! $1 ] ; then
 	op='help'
+elif [ ! -z $2 ]; then
+	ifconfig $2 2> /dev/null
+	if [ $? -ne 0 ]; then
+		echo "Incorrect interface. . . "
+		exit 1
+	else
+		op=$1
+	fi
 else
 	op=$1
 fi
