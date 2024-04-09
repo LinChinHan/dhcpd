@@ -77,10 +77,11 @@ ip tunnel del he-ipv6
 ip route del $LOCAL_V6 dev ${Client_IF}
 
 # Add back original routing if need.
+# Mark it if your PC does not have ipv6 ip.
 ip route add ::/0 dev ${WAN_IF}
 
-service radvd stop
-service radvd status
+#service radvd stop
+#service radvd status
 
 # Uncomment or run the following separately to check your address configuration
 # ip -f inet6 addr
