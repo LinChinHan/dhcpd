@@ -51,6 +51,7 @@ case $op in
 			docker run -it -d --net host --name ${name} -e DHCPD_PROTOCOL=6 -v "$(pwd)/data_v6":/data networkboot/dhcpd ${interface}
 			cp /etc/radvd.conf /etc/radvd.conf.bk
 			cp ./radvd.conf /etc/radvd.conf
+			service radvd stop
 			service radvd start
 		else
 			echo "It's running!"	
@@ -61,7 +62,6 @@ case $op in
 		if [ "${running}" != "" ]; then
 			docker stop ${name}
 			docker rm ${name}
-			service radvd stop
 		else
 			echo "${name} is not running."
 		fi
