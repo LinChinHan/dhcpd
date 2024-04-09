@@ -1,49 +1,62 @@
-# ReadME Document
-Auther: Elliot Lin
+# DHCPD Docker
+
+## ReadME Document
+Auther: Elliot Lin <elliot_lin@arcadyan.com.tw>
 
 ## Defination
-he_ipv6_start.sh : shell script for set up the HE tunnel and route for ipv6 (will also enable radvd)
+- he_ipv6_start.sh : shell script for set up the HE tunnel and route for ipv6 (will also enable radvd)
 
-he_ipv6_stop.sh : shell script for clear setting of HE tunnel and route for ipv6 ( will also disable radvd)
+- he_ipv6_stop.sh : shell script for clear setting of HE tunnel and route for ipv6 ( will also disable radvd)
 
-run.sh : shell script for dhcpv4 server
+- run.sh : shell script for dhcpv4 server
 
-run_ipv6.sh : shell script for dhcpv6 server
+- run_ipv6.sh : shell script for dhcpv6 server
 
-interface.sh : Set up interface for subscriber network.
+- interface.sh :
+	1. Set up interface for subscriber network.
+	2. Set up radvd.conf
+	3. set up data/dhcpd.conf
+	4. set up data_v6/dhcpd.conf
+
+- data/dhcpd.conf : dhcpdv4 configuration file. Auto produce by interface.sh
+
+- data_v6/dhcpd.conf : dhcpdv6 configuration file. Auto produce by interface.sh
+
+- radvd.conf : radvd daemon configuration file. Auto produce by interface.sh
+
+For configuration file, you can edit it after executing interface.sh. The script will auto detect how to modify/delete configuration.
 
 
 ## Quick start:
 
-Pre-requirement: to install docker and radvd by below command:
+0. Pre-requirement: to install docker and radvd by below command:
 ```
+#Will install docker and set up ip forwarding
 make install
 ```
 
-
-1. ./interface.sh : to add interface :
-	ex:
+1. ./interface.sh : to add interface and set up ip for v4 and v6:
+```
+	#example:
 	./interface.sh add enp2s0 100 : Add interface enp2s0 with vlan 100
 	./interface.sh add enp2s0 : Add interface enp2s0 with untag.
-
-2. Add dhcp configuration to ./data/dhcpd.conf (follow interface IP range to add)
-	(v6 config is in ./data_v6/dhcpd.conf)
-
-3. ./run.sh : to start the DHCPv4 Server Daemon
+```
+2. ./run.sh : to start the DHCPv4 Server Daemon
+```
 	(v6 should use ./run_v6.sh)
 	ex:
 	./run.sh start enp2s0 100 : Add DHCP Server for enp2s0 with vlan 100
 	./run.sh start enp2s0  : Add DHCP Server for enp2s0 with untag
-
-4. Modify the /etc/sysctl.conf to support IPv4 / IPv6 forwarding
-```
-sysctl -p /etc/sysctl.conf
-sysctl -p
+	
+	./run.sh stop enp2s0  : Stop DHCP Server for enp2s0 with untag
+	./run.sh stop enp2s0 100 : Stop DHCP Server for enp2s0 with vlan 100
 ```
 
 
-## v6 RADVD:
-Please copy ./radvd.conf to /etc/radvd.conf, note to set up subnet after executing "interface.sh add"
+
+## RADVD for IPv6:
+run_v6.sh will auto copy ./radvd.conf to /etc/radvd.conf, note to set up subnet after executing "interface.sh add"
+
 
 	
 
