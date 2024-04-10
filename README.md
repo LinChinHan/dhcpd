@@ -35,8 +35,40 @@ For configuration file, you can edit it after executing interface.sh. The script
 make install
 ```
 
+> If you need ipv6 service, please run he_ipv6_start.sh to set up the tunnel and route.
+
+#Modify HE information to he_ipv6_start.sh, you could get those HE information from your HE page side
+```
+WAN_IF=eno1
+MY_IF=ppp0
+...
+SERVER_V4=216.218.221.42 #(not important, will auto obtain from "MY_IF")
+CLIENT_V6=2001:470:35:8a7::2/64
+...
+HE_USER="jerryricelin"
+HE_PASS="Wn6ZsgdQcWExSlC9"
+HE_TUNNEL="907275"
+
+```
+
+> Execute the command to bring up tunnel
+```
+./he_ipv6_start.sh
+```
+
+> You can remove tunnel and route by below command:
+```
+./he_ipv6_stop.sh
+```
+
+After executing the 
+
 1. ./interface.sh : to add interface and set up ip for v4 and v6:
 ```
+	#Please set up your ISP Prefix in "ISP_PrefixV6", ISP or "HE" could provide you the prefix of IPv6 for clients.
+	#For Example:
+	ISP_PrefixV6=2001:470:eeac
+
 	#example: Add interface enp2s0 with vlan 100
 	./interface.sh add enp2s0 100
 	#example: Add interface enp2s0 without vlan tag
@@ -63,15 +95,6 @@ make install
 	./run.sh stop enp2s0 100
 ```
 
-Note : If you need ipv6 service, please run he_ipv6_start.sh to set up the tunnel and route.
-```
-./he_ipv6_start.sh
-```
-
-You can remove tunnel and route by below command:
-```
-./he_ipv6_stop.sh
-```
 
 ## RADVD for IPv6:
 run_v6.sh will auto copy ./radvd.conf to /etc/radvd.conf, note to set up subnet after executing "interface.sh add"
