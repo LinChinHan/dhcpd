@@ -1,6 +1,6 @@
-# DHCPD Docker
+# DHCPD Server in Docker
 
-## ReadME Document
+## README Document
 Auther: Elliot Lin <elliot_lin@arcadyan.com.tw>
 
 ## Defination

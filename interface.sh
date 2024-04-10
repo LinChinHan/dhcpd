@@ -213,7 +213,7 @@ function dhcpdV6_del(){
 if [ ! $2 ] || [ ! $1 ] ; then
 	op='help'
 elif [ ! -z $2 ]; then
-	ifconfig $2 2> /dev/null
+	ifconfig $2 > /dev/null
 	if [ $? -ne 0 ]; then
 		echo "Incorrect interface. . . "
 		exit 1
@@ -225,7 +225,7 @@ else
 fi
 
 if [ ! $3 ]; then
-        vlan=untag
+	vlan=untag
 	address=172.16.1.1
 	prefixV4=172.16.1.
 	netmask=24
