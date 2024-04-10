@@ -3,6 +3,13 @@
 #Debug flag
 #set -x
 
+#Defination
+ISP_PrefixV6=2001:470:eeac
+
+#Only support 48 currently
+ISP_NetmaskV6=48
+
+
 function radvd_add(){
 	# $1 : interface
 	# $2 : Vlan
@@ -241,8 +248,8 @@ if [ ! $3 ]; then
 	#2001:470:eeac:[vlan ID]::/65 for IANA
 	#2001:470:eeac:[vlan ID]:8000::/65 for IANA
 	#::1 will always to be used in server side.
-	addressV6=2001:470:eeac:0::1
-	prefixV6=2001:470:eeac
+	addressV6=${ISP_PrefixV6}:0::1
+	prefixV6=${ISP_PrefixV6}
 	netmaskV6=64
 else
 	vlan=$3
@@ -275,8 +282,8 @@ else
 	fi
 
 	#::1 will always to be used in server side.
-	prefixV6=2001:470:eeac:${vlan}
-	addressV6=2001:470:eeac:${vlan}::1
+	prefixV6=${ISP_PrefixV6}:${vlan}
+	addressV6=${ISP_PrefixV6}:${vlan}::1
 fi
 
 

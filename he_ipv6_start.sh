@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # uncomment for debug
- set -x
+ #set -x
 
 # Hurricane Electric IPv6 Tunnel Broker script for Slackware
 # You can run it from 
@@ -45,33 +45,23 @@ modprobe ipv6
 # The primary internet-facing network interface
 WAN_IF=eno1
 MY_IF=ppp0
-Client_IF=enp2s0
+#Client_IF=enp2s0
 # Given under "IPv6 Tunnel Endpoints" on the tunnel details page
 
-#Elliotarc
-#SERVER_V4=216.218.221.42
-#CLIENT_V6=2001:470:35:95f::2/64
 
-#Jerry
+#HE Information
 SERVER_V4=216.218.221.42
 CLIENT_V6=2001:470:35:8a7::2/64
 
 # An address from your Routed /64 or /48 prefix for the local interface
-LOCAL_V6=2001:470:eeac::
-LOCAL_V6_PREFIX=48
-
-#ElliotArc
-#LOCAL_V6=2001:470:36:95f::/64
+# In case we use 48
+#LOCAL_V6=2001:470:eeac::
+#LOCAL_V6_PREFIX=48
 
 # If you have a static IP address (such as on Linode), you can comment these out.
 # Otherwise, set them to your tunnelbroker.net username and password, and your tunnel ID.
 
-#Elliotarc
-#HE_USER="ArcElliot"
-#HE_PASS="ZBuDTIKEQirZPlYy"
-#HE_TUNNEL="907251"
-
-#Jerry
+#HE Account information   #HE_PASS is the token of tunnel, not really password
 HE_USER="jerryricelin"
 HE_PASS="Wn6ZsgdQcWExSlC9"
 HE_TUNNEL="907275"
@@ -83,27 +73,39 @@ echo "### Local v4 IP is ${LOCAL_V4}"
 
 #You need to install LWP perl package
 
+#Not use currently
 HE_USER_ENC=`perl -MURI::Escape -e "print uri_escape('$HE_USER')"`
 HE_PASS_ENC=`perl -MURI::Escape -e "print uri_escape('$HE_PASS')"`
 
+#Update IP to HE
 curl -k -s "https://$HE_USER_ENC:$HE_PASS_ENC@ipv4.tunnelbroker.net/nic/update?hostname=$HE_TUNNEL&myip=$LOCAL_V4"
-#https://ElliotLin:VEdBtiYgYJFrTuvh@ipv4.tunnelbroker.net/nic/update?hostname=907239
 
 
 # Drop any existing tunnel
+echo "### Delete exist he-ipv6. . ."
 ip tunnel del he-ipv6
-ip addr del $LOCAL_V6/$LOCAL_V6_PREFIX dev $MY_IF
+#ip addr del $LOCAL_V6/$LOCAL_V6_PREFIX dev $MY_IF
 
 # Configure the tunnel and local interfaces and routing table
+echo "### Create ip tunnel for he-ipv6. . ."
 ip tunnel add he-ipv6 mode sit remote $SERVER_V4 local $LOCAL_V4 ttl 255
 ip link set he-ipv6 up
 ip addr add $CLIENT_V6 dev he-ipv6
+
+
+#Delete default route for v6 if need
+echo "### Delete default route. . ."
 ip route del ::/0 dev ${WAN_IF}
+
+#Add default route to he-ipv6
+echo "### Add default route for he-ipv6. . ."
 ip route add ::/0 dev he-ipv6
 
-#For Client if this PC is working as server
-ip route add $LOCAL_V6/$LOCAL_V6_PREFIX dev ${Client_IF}
-ip addr add ${LOCAL_V6}1/64 dev ${Client_IF}
+
+#For Client if this PC is working as server (Add route and set IP)
+#echo "### Set IP for Client NIC and set route for client. . ."
+#ip route add $LOCAL_V6/$LOCAL_V6_PREFIX dev ${Client_IF}
+#ip addr add ${LOCAL_V6}1/64 dev ${Client_IF}
 
 #service radvd start
 #service radvd status
