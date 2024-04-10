@@ -24,46 +24,44 @@ Auther: Elliot Lin <elliot_lin@arcadyan.com.tw>
 
 - radvd.conf : radvd daemon configuration file. Auto produce by interface.sh
 
-For configuration file, you can edit it after executing interface.sh. The script will auto detect how to modify/delete configuration.
+> For configuration file, you can edit it after executing interface.sh. The script will auto detect how to modify/delete configuration.
 
 
 ## Quick start:
 
-0. Pre-requirement: to install docker and radvd by below command:
-```
+* Pre-requirement: to install docker and radvd by below command:
+```bash
 #Will install docker and set up ip forwarding
 make install
 ```
 
-If you need ipv6 service, please run he_ipv6_start.sh to set up the tunnel and route.
+* If you need ipv6 service, please run he_ipv6_start.sh to set up the tunnel and route.
+    * Modify HE information to he_ipv6_start.sh, you could get those HE information from your HE page side
+    ```
+    WAN_IF=eno1
+    MY_IF=ppp0
+    ...
+    SERVER_V4=216.218.221.42 #(not important, will auto obtain from "MY_IF")
+    CLIENT_V6=2001:470:35:8a7::2/64
+    ...
+    HE_USER="jerryricelin"
+    HE_PASS="Wn6ZsgdQcWExSlC9"
+    HE_TUNNEL="907275"
 
-#Modify HE information to he_ipv6_start.sh, you could get those HE information from your HE page side
-```
-WAN_IF=eno1
-MY_IF=ppp0
-...
-SERVER_V4=216.218.221.42 #(not important, will auto obtain from "MY_IF")
-CLIENT_V6=2001:470:35:8a7::2/64
-...
-HE_USER="jerryricelin"
-HE_PASS="Wn6ZsgdQcWExSlC9"
-HE_TUNNEL="907275"
+    ```
 
-```
+    * Execute the command to bring up tunnel
+    ```
+    ./he_ipv6_start.sh
+    ```
 
-Execute the command to bring up tunnel
-```
-./he_ipv6_start.sh
-```
+    * You can remove tunnel and route by below command:
+    ```
+    ./he_ipv6_stop.sh
+    ```
 
-You can remove tunnel and route by below command:
-```
-./he_ipv6_stop.sh
-```
 
-After executing the 
-
-1. ./interface.sh : to add interface and set up ip for v4 and v6:
+* ./interface.sh : To add interface and set up ip for v4 and v6:
 ```
 	#Please set up your ISP Prefix in "ISP_PrefixV6", ISP or "HE" could provide you the prefix of IPv6 for clients.
 	#For Example:
@@ -79,9 +77,9 @@ After executing the
 	#example: del interface enp2s0 without vlan tag ( Will only remove Server configurations and iptables. will not remove interface for untag.)
 	./interface.sh del enp2s0
 	
-
 ```
-2. ./run.sh : to start the DHCPv4 Server Daemon
+
+* ./run.sh : to start the DHCPv4 Server Daemon
 ```
 	(v6 should use ./run_v6.sh)
 	#ex: Start DHCP Server for enp2s0 with vlan 100
@@ -98,7 +96,7 @@ After executing the
 
 ## RADVD for IPv6:
 run_v6.sh will auto copy ./radvd.conf to /etc/radvd.conf, note to set up subnet after executing "interface.sh add"
-Please note that you have already install radvd by "make install"
+> Please note that you have already install radvd by "make install"
 
 	
 
