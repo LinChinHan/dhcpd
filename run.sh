@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#Debug flag
+#set -x
+
 #docker run -it --rm --init --net host -v "$(pwd)/data":/data networkboot/dhcpd enp2s0
 
 if [ ! $1 ]; then
@@ -40,7 +43,7 @@ else
 	name=DHCPv4_Server_${interface}
 fi
 
-running=`docker ps -a | grep ${interface} | grep ${vlan}| grep v4`
+running=`docker ps -a | grep "${interface}" | grep "${vlan}" | grep "v4"`
 echo ${running}
 echo ${interface}
 

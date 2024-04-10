@@ -2,6 +2,9 @@
 
 #docker run -it --rm --init --net host -v "$(pwd)/data":/data networkboot/dhcpd enp2s0
 
+#Debug flag
+#set -x
+
 if [ ! $1 ]; then
         op="help"
 else
@@ -41,7 +44,7 @@ else
 fi
 
 name=DHCPv6_Server_${interface}_${vlan}
-running=`docker ps -a | grep ${interface} | grep ${vlan} | grep v6`
+running=`docker ps -a | grep "${interface}" | grep "${vlan}" | grep "v6"`
 #echo ${running}
 #echo ${interface}
 
