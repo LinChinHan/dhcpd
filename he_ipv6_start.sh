@@ -105,8 +105,8 @@ ip route add ::/0 dev he-ipv6
 ip route add $LOCAL_V6/$LOCAL_V6_PREFIX dev ${Client_IF}
 ip addr add ${LOCAL_V6}1/64 dev ${Client_IF}
 
-service radvd start
-service radvd status
+#service radvd start
+#service radvd status
 
 # Uncomment or run the following separately to check your address configuration
 # ip -f inet6 addr
