@@ -35,7 +35,7 @@ For configuration file, you can edit it after executing interface.sh. The script
 make install
 ```
 
-> If you need ipv6 service, please run he_ipv6_start.sh to set up the tunnel and route.
+If you need ipv6 service, please run he_ipv6_start.sh to set up the tunnel and route.
 
 #Modify HE information to he_ipv6_start.sh, you could get those HE information from your HE page side
 ```
@@ -51,12 +51,12 @@ HE_TUNNEL="907275"
 
 ```
 
-> Execute the command to bring up tunnel
+Execute the command to bring up tunnel
 ```
 ./he_ipv6_start.sh
 ```
 
-> You can remove tunnel and route by below command:
+You can remove tunnel and route by below command:
 ```
 ./he_ipv6_stop.sh
 ```
