@@ -97,7 +97,10 @@ make install
 ## RADVD for IPv6:
 run_v6.sh will auto copy ./radvd.conf to /etc/radvd.conf, note to set up subnet after executing "interface.sh add"
 > Please note that you have already install radvd by "make install"
-
+> If you don't need radvd (ipv6 service), please disable it everytime:
+```
+service radvd stop
+```
 	
 
 ## Stop NM forever:

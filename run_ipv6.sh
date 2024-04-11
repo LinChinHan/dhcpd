@@ -52,30 +52,40 @@ case $op in
 	"start")
 		if [ "${running}" = "" ]; then
 			docker run -it -d --net host --name ${name} -e DHCPD_PROTOCOL=6 -v "$(pwd)/data_v6":/data networkboot/dhcpd ${interface}
-			cp /etc/radvd.conf /etc/radvd.conf.bk
+			echo "[RADVD] Replace ./radvd.conf to /etc/radvd.conf and restart daemon. . ."
+			mv /etc/radvd.conf /etc/radvd.conf.bk
 			cp ./radvd.conf /etc/radvd.conf
 			service radvd stop
 			service radvd start
 		else
 			echo "It's running!"	
 		fi
-		
 	;;
 	"stop")
 		if [ "${running}" != "" ]; then
 			docker stop ${name}
 			docker rm ${name}
+			echo "[RADVD] Try to check radvd.conf. . ."
+			if [ -z `cat radvd.conf | awk 'NR==1{print $1}'` ]; then
+				echo "[RADVD DELETE] There is no interface need radvd. Stop radvd service!"
+				service radvd stop
+			else
+				echo "[RADVD DELETE] Replace ./radvd.conf to /etc/radvd.conf and restart daemon. . ."
+				mv /etc/radvd.conf /etc/radvd.conf.bk
+				cp ./radvd.conf /etc/radvd.conf
+				service radvd stop
+				service radvd start
+			fi
+
 		else
 			echo "${name} is not running."
 		fi
+
 	;;
 	"restart")
 		if [ "${running}" != "" ]; then
 			docker stop ${name}
 			docker rm ${name}
-			cp /etc/radvd.conf /etc/radvd.conf.bk
-			cp ./radvd.conf /etc/radvd.conf
-			service radvd restart
 		fi
 		docker run -it -d --net host --name ${name} -e DHCPD_PROTOCOL=6 -v "$(pwd)/data_v6":/data networkboot/dhcpd ${interface}
 	;;

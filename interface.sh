@@ -92,6 +92,7 @@ function radvd_del(){
 		#endl=`expr $line + 18`
 		#sed -i ${line},${endl}d radvd.conf
         fi
+	
 }
 
 function dhcpd_add(){
