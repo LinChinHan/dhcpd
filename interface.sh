@@ -362,12 +362,12 @@ case ${op} in
                 else
 			echo "[DELETE] Remove ipv6 address. . ."
 			ip addr del ${addressV6}/${netmaskV6} dev ${interface}.${vlan} 2> /dev/null
-			if [ $? != 0 ]; then
-				echo "[DELETE] Remove ip failed, please check if interface \"${interface}.${vlan}\" is exist."
-				exit 1
-			fi
+			#if [ $? != 0 ]; then
+			#	echo "[DELETE] Remove ip failed, please check if interface \"${interface}.${vlan}\" is exist."
+			#	exit 1
+			#fi
 			echo "[DELETE] Shutdown interface. . ."
-                        ifconfig ${interface}.${vlan} ${address}/${netmask} down
+                        ifconfig ${interface}.${vlan} down
 			echo "[DELETE] Remove vlan interface. . ."
                         vconfig rem ${interface}.${vlan}
                 fi
