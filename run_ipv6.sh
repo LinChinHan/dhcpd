@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#docker run -it --rm --init --net host -v "$(pwd)/data":/data networkboot/dhcpd enp2s0
+#docker run -it --rm --init --net host -v "$(pwd)/data":/data mydhcp:v1 enp2s0
 
 #Debug flag
 #set -x
@@ -51,7 +51,7 @@ running=`docker ps -a | grep "${interface}" | grep "${vlan}" | grep "v6"`
 case $op in
 	"start")
 		if [ "${running}" = "" ]; then
-			docker run -it -d --net host --name ${name} -e DHCPD_PROTOCOL=6 -v "$(pwd)/data_v6":/data networkboot/dhcpd ${interface}
+			docker run -it -d --net host  --name ${name} --privileged=true -e DHCPD_PROTOCOL=6 -v "$(pwd)/data_v6":/data mydhcp:v1 ${interface}
 			echo "[RADVD] Replace ./radvd.conf to /etc/radvd.conf and restart daemon. . ."
 			mv /etc/radvd.conf /etc/radvd.conf.bk
 			cp ./radvd.conf /etc/radvd.conf
@@ -87,7 +87,7 @@ case $op in
 			docker stop ${name}
 			docker rm ${name}
 		fi
-		docker run -it -d --net host --name ${name} -e DHCPD_PROTOCOL=6 -v "$(pwd)/data_v6":/data networkboot/dhcpd ${interface}
+		docker run -it -d --net host --name ${name} --privileged=true -e DHCPD_PROTOCOL=6 -v "$(pwd)/data_v6":/data mydhcp:v1 ${interface}
 	;;
 	"logs")
 		docker logs ${name}

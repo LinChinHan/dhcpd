@@ -9,22 +9,20 @@ set -x
 # $4: PD Prefix
 
 
+if [ ! -e /usr/sbin/ip ]; then
+	apt-get update && apt-get install -y iproute2
+fi
 case $1 in
 	"commit")
-		echo $2
-		echo $3
-		echo $4
-
-		#ip route add ${3}/${4} via $2
+		ip route del ${3}/${4}
+		ip route add ${3}/${4} via $2
 
 	;;
 	"expiry")
-		echo $4
-		#ip route del ${3}/${4} via $2
+		ip route del ${3}/${4} via $2
 	;;
 	"release")
-		echo $4
-		#ip route del ${3}/${4} via $2
+		ip route del ${3}/${4} via $2
 	;;
 	*)
 	echo "- Warnning:"

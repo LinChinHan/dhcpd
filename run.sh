@@ -3,7 +3,7 @@
 #Debug flag
 #set -x
 
-#docker run -it --rm --init --net host -v "$(pwd)/data":/data networkboot/dhcpd enp2s0
+#docker run -it --rm --init --net host -v "$(pwd)/data":/data mydhcp:v1 enp2s0
 
 if [ ! $1 ]; then
 	op="help"
@@ -50,7 +50,7 @@ echo ${interface}
 case ${op} in
 	"start")
 		if [ "${running}" = "" ]; then
-			docker run -it -d --net host --name ${name} -v "$(pwd)/data":/data networkboot/dhcpd ${interface}
+			docker run -it -d --net host --name ${name} -v "$(pwd)/data":/data mydhcp:v1 ${interface}
 		else
 			echo "It's running!"	
 		fi
@@ -69,7 +69,7 @@ case ${op} in
 			docker stop ${name}
 			docker rm ${name}
 		fi
-		docker run -it -d --net host --name ${name} -v "$(pwd)/data":/data networkboot/dhcpd ${interface}
+		docker run -it -d --net host --name ${name} -v "$(pwd)/data":/data mydhcp:v1 ${interface}
 	;;
 	"logs")
 		docker logs ${name}
