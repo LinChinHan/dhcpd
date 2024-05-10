@@ -24,6 +24,9 @@ install: prepare
 	
 	docker run hello-world
 
+docker_dhcp:
+	docker build -t mydhcp:v1 ./dhcpd/
+
 prepare:
 	#This prepare is to enable forwarding for ipv4 and ipv6
 	@$(shell sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf)
