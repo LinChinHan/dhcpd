@@ -132,4 +132,11 @@ sysctl -p /etc/sysctl.conf
 //should enable both ipv4 and ipv6
 ```
 
+#DNS
+```
+# Enable dns server
+make dns_up
 
+# Disable dns server
+make dns_down
+```
