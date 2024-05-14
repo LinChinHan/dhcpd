@@ -19,8 +19,8 @@ function dns_add(){
 	
 	domain_name=${domain}$1.com
 
-	ret=`cat dns/named.conf | grep ${domain_name}`
-	if [ -z $ret ] ; then
+	ret=`cat dns/named.conf | grep ${domain_name} | awk '{print $2}'`
+	if [ ! -z $ret ] ; then
 		echo "[DNS ADD] No need to Add,  "$ret"  is in dns.conf already. . ."
 	else
 		echo "[DNS ADD] Add dns.conf . . ."
