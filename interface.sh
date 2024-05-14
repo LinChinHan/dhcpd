@@ -385,7 +385,7 @@ case ${op} in
 		echo "[ADD] AdresssV6 ${addressV6}/${netmaskV6}"
 		echo "======================================================="
 		if [ ! $3 ]; then
-			#ifconfig ${interface} ${address}/${netmask} up
+			ifconfig ${interface} ${address}/${netmask} up
 			ip addr add ${addressV6}/${netmaskV6} dev ${interface}
 		else
 			echo "[ADD] Adding VLAN interface ${interface}.${vlan}"
