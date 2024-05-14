@@ -19,12 +19,19 @@ function dns_add(){
 	
 	domain_name=${domain}$1.com
 
+	ret=`cat dns/named.conf | grep ${domain_name}`
+	if [ -z $ret ] ; then
+		echo "[DNS ADD] No need to Add,  "$ret"  is in dns.conf already. . ."
+	else
+		echo "[DNS ADD] Add dns.conf . . ."
+		echo "zone \"${domain_name}\" {" >> dns/named.conf
+		echo "        type master;" >> dns/named.conf
+		echo "        file \"/etc/bind/${1}_zone\";" >> dns/named.conf
+		echo "};" >> dns/named.conf
+		echo "" >> dns/named.conf
+	fi
 
-	echo "zone \"${domain_name}\" {" >> dns/named.conf
-	echo "        type master;" >> dns/named.conf
-	echo "        file \"/etc/bind/${1}_zone\";" >> dns/named.conf
-	echo "};" >> dns/named.conf
-	echo "" >> dns/named.conf
+	rm -rf dns/${1}_zone
 
 	echo "\$ORIGIN ${domain_name}." >> dns/${1}_zone
 	echo "\$TTL 1W" >> dns/${vlan}_zone
