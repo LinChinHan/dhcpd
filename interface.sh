@@ -9,6 +9,84 @@ ISP_PrefixV6=2001:470:eeac
 #Only support 48 currently
 ISP_NetmaskV6=48
 
+#Domain name
+domain=eit
+
+function dns_add(){
+	#$1: vlan
+	#$2: ipv4
+	#$3: ipv6
+	
+	domain_name=${domain}$1.com
+
+
+	echo "zone \"${domain_name}\" {" >> dns/named.conf
+	echo "        type master;" >> dns/named.conf
+	echo "        file \"/etc/bind/${1}_zone\";" >> dns/named.conf
+	echo "};" >> dns/named.conf
+	echo "" >> dns/named.conf
+
+	echo "\$ORIGIN ${domain_name}." >> dns/${1}_zone
+	echo "\$TTL 1W" >> dns/${vlan}_zone
+	echo "@                       1D IN SOA       ${domain_name}. root.${domain_name}. (" >> dns/${1}_zone
+	echo "                                        1               ; serial" >> dns/${1}_zone
+	echo "                                        3H              ; refresh" >> dns/${1}_zone
+	echo "                                        15M             ; retry" >> dns/${1}_zone
+	echo "                                        1W              ; expiry" >> dns/${1}_zone
+	echo "                                        1D )            ; minimum" >> dns/${1}_zone
+	echo "" >> dns/${1}_zone
+	echo "                        1D IN NS        ns" >> dns/${1}_zone
+	echo "ns                      1D IN A         ${2}" >> dns/${1}_zone
+	echo "ns                      1D IN AAAA      ${3}" >> dns/${1}_zone
+	echo "" >> dns/${1}_zone
+	echo "www                     1D IN A         ${2}" >> dns/${1}_zone
+	echo "www                     1D IN AAAA      ${3}" >> dns/${1}_zone
+	
+	
+}
+
+function dns_del(){
+	#$1: vlan
+	domain_name=${domain}$1
+
+	ret=`cat dns/named.conf | grep ${domain_name}`
+	line=`cat dns/named.conf | grep -n ${domain_name} | awk -F ":" '{print $1}'`
+
+        echo "ret = $ret"
+        echo "line = $line"
+        if [ -z $ret ]; then
+                echo "[DNS DELETE] No need to delete, Cannot find interface "$ret" in dns.conf. . ."
+        else
+                echo "[DNS DELETE] deleted from line ${line} : `sed -n ${line}p dns/named.conf`!!!!"
+                #delete interface xxxxx
+                sed -i ${line}d dns/named.conf
+                #delete first "{"
+                echo "[DNS DELETE] line to delete line $line : `sed -n ${line}p dns/named.conf`"
+                sed -i ${line}d dns/named.conf
+                top=1
+                while [ ${top} -ne 0 ]; do
+                        if [ ! -z `sed -n ${line}p dns/named.conf | awk '{print $1}'` ] && [ `sed -n ${line}p dns/named.conf | awk '{print $1}'` = '{' ]; then
+                                top=`expr $top + 1`
+                        elif [ ! -z `sed -n ${line}p dns/named.conf | awk '{print $1}'` ] && [ `sed -n ${line}p dns/named.conf | awk '{print $1}'` = '};' ]; then
+                                top=`expr $top - 1`
+                        fi
+                        echo "[DNS DELETE] line to delete line $line : `sed -n ${line}p dns/named.conf`"
+                        sed -i ${line}d dns/named.conf
+                done
+
+                #delete space:
+                sed -i ${line}d dns/named.conf
+                #while read p; do
+                #       echo $p
+                #done < radvd.conf
+
+                #endl=`expr $line + 18`
+                #sed -i ${line},${endl}d radvd.conf
+        fi
+
+
+	rm -rf dns/${1}_zone
+}
 
 function radvd_add(){
 	# $1 : interface
@@ -39,7 +117,7 @@ function radvd_add(){
 		echo "     AdvAutonomous on;" >> radvd.conf
 		echo "     AdvRouterAddr on;" >> radvd.conf
 		echo "   };" >> radvd.conf
-		echo "   RDNSS 2001:4860:4860::8888 2001:4860:4860::8844" >> radvd.conf
+		echo "   RDNSS ${3}::1 2001:4860:4860::8888" >> radvd.conf
 		echo "    {" >> radvd.conf
 		echo "      AdvRDNSSLifetime 30;" >> radvd.conf
 		echo "    };" >> radvd.conf
@@ -100,13 +178,17 @@ function dhcpd_add(){
 	# $2 : Vlan  (not use )
         # $3 : prefixv4 ex 192.168.1.
 	# $4 : maskv4 ex:24 
+
+	domain_name=${domain}$2.com
+
         echo "[DHCPDv4 ADD] Modfiying data/dhcpd.conf ...."
 	ret=`grep -i ${3}0 data/dhcpd.conf | awk '{print $2}'`
         if [ -z $ret ]; then
 		echo "subnet ${3}0 netmask 255.255.255.0 {" >> data/dhcpd.conf
 		echo "  range ${3}101 ${3}254;" >> data/dhcpd.conf
 		echo "  option routers ${3}1;" >> data/dhcpd.conf
-		echo "  option domain-name-servers 8.8.8.8, 8.8.4.4;" >> data/dhcpd.conf
+		echo "  option domain-name \"${domain_name}\";" >> data/dhcpd.conf
+		echo "  option domain-name-servers ${3}1, 8.8.8.8;" >> data/dhcpd.conf
 		echo "}" >> data/dhcpd.conf
 		echo "" >> data/dhcpd.conf
         else
@@ -153,17 +235,20 @@ function dhcpd_del(){
 function dhcpdV6_add(){
 	# $1 : interface (not use)
 	# $2 : Vlan  (not use )
-        # $3 : prefixv6 ex : 2001:470:eeac:9999
+        # $3 : prefixv6 ex : 2001:470:eeac:
 	# $4 : maskv6 ex:65
-        echo "[DHCPDv6 ADD] Modfiying data_v6/dhcpd.conf ...."
+
+	domain_name=${domain}$2.com
+        
+	echo "[DHCPDv6 ADD] Modfiying data_v6/dhcpd.conf ...."
 	ret=`grep -i "${3}::/${4} {" data_v6/dhcpd.conf | awk '{print $2}'`
         if [ -z $ret ]; then
 		if [ $2 = "untag" ]; then
 			echo "subnet6 ${3}::/$4 {" >> data_v6/dhcpd.conf
 			echo "  range6 ${3}::101 ${3}::100:254;" >> data_v6/dhcpd.conf
 			echo "  range6 ${3}::/${4} temporary;" >> data_v6/dhcpd.conf
-			echo "  option dhcp6.name-servers 2001:4860:4860::8888;" >> data_v6/dhcpd.conf
-			echo "  option dhcp6.domain-search \"domain.example\";" >> data_v6/dhcpd.conf
+			echo "  option dhcp6.name-servers ${3}::1, 2001:4860:4860::8888;" >> data_v6/dhcpd.conf
+			echo "  option dhcp6.domain-search \"${domain_name}\";" >> data_v6/dhcpd.conf
 			echo "  prefix6 ${3}:6666:: ${3}:7777:: /64;" >> data_v6/dhcpd.conf
 			echo "}" >>  data_v6/dhcpd.conf
 			echo "" >> data_v6/dhcpd.conf
@@ -171,8 +256,8 @@ function dhcpdV6_add(){
 			echo "subnet6 ${3}::/$4 {" >> data_v6/dhcpd.conf
 			echo "  range6 ${3}::101 ${3}::100:254;" >> data_v6/dhcpd.conf
 			echo "  range6 ${3}::/${4} temporary;" >> data_v6/dhcpd.conf
-			echo "  option dhcp6.name-servers 2001:4860:4860::8888;" >> data_v6/dhcpd.conf
-			echo "  option dhcp6.domain-search \"domain.example\";" >> data_v6/dhcpd.conf
+			echo "  option dhcp6.name-servers ${3}::1, 2001:4860:4860::8888;" >> data_v6/dhcpd.conf
+			echo "  option dhcp6.domain-search \"${domain_name}\";" >> data_v6/dhcpd.conf
 			echo "  prefix6 ${3}:8000:: ${3}:f000:: /68;" >> data_v6/dhcpd.conf
 			echo "}" >>  data_v6/dhcpd.conf
 			echo "" >> data_v6/dhcpd.conf
@@ -300,7 +385,7 @@ case ${op} in
 		echo "[ADD] AdresssV6 ${addressV6}/${netmaskV6}"
 		echo "======================================================="
 		if [ ! $3 ]; then
-			ifconfig ${interface} ${address}/${netmask} up
+			#ifconfig ${interface} ${address}/${netmask} up
 			ip addr add ${addressV6}/${netmaskV6} dev ${interface}
 		else
 			echo "[ADD] Adding VLAN interface ${interface}.${vlan}"
@@ -334,6 +419,7 @@ case ${op} in
 		radvd_add ${interface} ${vlan} ${prefixV6} ${netmaskV6}
 		dhcpd_add ${interface} ${vlan} ${prefixV4} ${netmask}
 		dhcpdV6_add ${interface} ${vlan} ${prefixV6} ${netmaskV6}
+		dns_add ${vlan} ${address} ${addressV6}
         ;;
         "del")
 		interface=$2
@@ -343,7 +429,8 @@ case ${op} in
 		radvd_del ${interface} ${vlan} ${prefixV6} ${netmaskV6}
 		dhcpd_del ${interface} ${vlan} ${prefixV4} ${netmask}
 		dhcpdV6_del ${interface} ${vlan} ${prefixV6} ${netmaskV6}
-		
+		dns_del ${vlan}
+
 		#iptables part
 		echo "[IPTABLES DELETE] Remove NAT forwarding in iptables. . ."
 		if [ ! -z `iptables -nvxL -t nat | grep ${prefixV4}0 | awk  '{print $8}'` ]; then

@@ -3,7 +3,7 @@ help:
 
 
 #Now platform is Ubuntu 
-install: prepare
+install: prepare docker_dhcp
 	sudo apt-get update
 	sudo apt-get install ca-certificates curl
 	sudo install -m 0755 -d /etc/apt/keyrings
@@ -33,3 +33,12 @@ prepare:
 	@$(shell sed -i 's/#net.ipv6.conf.all.forwarding=1/net.ipv6.conf.all.forwarding=1/g' /etc/sysctl.conf)
 	sysctl -p /etc/sysctl.conf
 	sysctl -p
+
+dns_up:
+	systemctl stop systemd-resolved
+	docker compose up -d
+
+dns_down:
+	docker compose down
+	systemctl restart systemd-resolved
+	

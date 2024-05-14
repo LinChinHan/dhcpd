@@ -1,0 +1,15 @@
+version: '3'
+services:
+  dns:
+    build: ./dns
+    image: docker_dns
+    container_name: dns
+    volumes:
+      - ./dns:/mnt/dns
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    #expose:
+    #  - "53/udp"
+    ports:
+      - "53:53"
+
