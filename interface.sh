@@ -410,7 +410,7 @@ case ${op} in
 		
 		#iptables part
 		echo "[IPTABLES ADD] Adding NAT forwarding in iptables. . ."
-		if [ -z `iptables -nvxL -t nat | grep ${prefixV4} | awk  '{print $8}'` ]; then
+		if [ -z `iptables -nvxL -t nat | grep ${prefixV4}.0 | awk  '{print $8}'` ]; then
 			iptables -t nat -A POSTROUTING -s ${address}/${netmask} -o ppp0 -j MASQUERADE
 			if [ $? -eq 0 ]; then
 				echo "[IPTABLES ADD] Adding iptables successfully. . ."

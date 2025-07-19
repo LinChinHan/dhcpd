@@ -40,11 +40,11 @@ dns_up:
 
 dns_down:
 	docker compose down
-	#Do not restart it to avoid dns disappear,
-	#solution is :
-	#mv /etc/resolve.conf /etc/resolve.conf.bk
-	#sed -i 's'DNS=''DNS= 8.8.8.8 168.95.1.1'/g
-	#ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+	@#Do not restart it to avoid dns disappear,
+	@#solution is :
+	@#mv /etc/resolve.conf /etc/resolve.conf.bk
+	@#sed -i 's'DNS=''DNS= 8.8.8.8 168.95.1.1'/g
+	@#ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
-	#systemctl restart systemd-resolved
+	@#systemctl restart systemd-resolved
 	
